@@ -12,25 +12,35 @@ export default function Form() {
         //     {txt : "Se reposer", id: uuidv4()}
         // ]);
 
-        const [stateInput, setStateInput] = useState();
+        const [stateInput, setStateInput] = useState('');
+        const [update, setUpdate] = useState(true);
 
 
         const [dataArr, setDataArr] = useState([])
         
         useEffect(() => {
-            axios.get('http://localhost:8000/instruction')
-                .then((response) => {
-                    setDataArr(response.data);
-                })
-        },[])
+            if(update){
+                axios.get('http://localhost:8000/instruction')
+                    .then((response) => {
+                        setDataArr(response.data);
+                        setUpdate(false);
+                    })
+            }
+        },[update])
 
 
         const deleteElement = id => {
             //console.log(id);
-            const filteredState = dataArr.filter(item => {
-                return item.id !== id;
-            })
-            setDataArr(filteredState);
+            axios.get('http://localhost:8000/instruction/delete/' + id, {instruction: stateInput})
+                .then((response) => {
+                    setUpdate(true);
+                    console.log(response.data);
+                  });
+
+            // const filteredState = dataArr.filter(item => {
+            //     return item.id !== id;
+            // })
+            // setDataArr(filteredState);
         }
 
 
@@ -48,18 +58,20 @@ export default function Form() {
             // setStateInput('');
 
             // console.log({instruction:stateInput});
-
-            axios.post('http://localhost:8000/instruction/create', {instruction:stateInput})
+            axios.post('http://localhost:8000/instruction/create', {instruction: stateInput})
                 .then((response) => {
-                    console.log(response);
+                    setUpdate(true);
+                    setStateInput('');
+                    console.log(response.data.message);
                 })
+                .catch(err => console.log(err.message))
 
         }
 
 
-        const linkedInput = e => {
-            setStateInput(e);
-        }
+        // const linkedInput = e => {
+        //     setStateInput(e);
+        // }
 
 
 
@@ -72,10 +84,11 @@ export default function Form() {
                 <label htmlFor="todo" className="form-label mt-3">Chose à faire</label>
                 <input 
                 value = {stateInput}
-                onInput={e => linkedInput(e.target.value) }
+                onInput={e => setStateInput(e.target.value) }
                 type="text" 
                 className="form-control" 
-                id="todo" />
+                id="todo"
+                required="true" />
 
                 <button
                  className = "mt-2 btn btn-primary d-block"
